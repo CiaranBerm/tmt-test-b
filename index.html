@@ -249,8 +249,7 @@
 // ══════════════════════════════════════════════
 //  CONFIGURATION — fill these in before deploying
 // ══════════════════════════════════════════════
-const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxep9HkUoBA02MrDTlaIwoP1Zy2aCVLw6jzfEiHZnsoFwSQ1StqPRMutbbiL1JvGxp6YA/exec';
-// See README: deploy a Google Apps Script Web App and paste its URL above.
+const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF20GZ491TC54RLFLc-fciBY6za3WPmyvXDY9D9u_A7bYNODceK-HlIiMOSr359COjEA/exec';
 // ══════════════════════════════════════════════
 
 const TOTAL = 25;
@@ -490,7 +489,7 @@ async function saveToSheets(result) {
   const syncBox = document.getElementById('sync-box');
   const syncMsg = document.getElementById('sync-msg');
 
-  const payload = {
+  const params = new URLSearchParams({
     deviceId:    DEVICE_ID,
     sessionType: sessionType,
     timestamp:   new Date().toISOString(),
@@ -499,14 +498,12 @@ async function saveToSheets(result) {
     accuracy:    result.acc,
     performance: result.cat,
     userAgent:   navigator.userAgent.substring(0, 80)
-  };
+  });
 
   try {
-    const res = await fetch(SHEETS_SCRIPT_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload),
-      mode:    'no-cors'
+    await fetch(SHEETS_SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode:   'no-cors'
     });
     syncBox.className = 'sync-status saved';
     syncMsg.textContent = 'Results saved successfully';
