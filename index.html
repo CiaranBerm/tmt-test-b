@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Trail Making Test — Part B</title>
+<title>Trail Making Test — A & B</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -50,12 +50,10 @@
 
   #app { width: 100%; max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; background: var(--surface); }
 
-  /* ── Screens ── */
   .screen { display: none; flex-direction: column; flex: 1; }
   .screen.active { display: flex; }
 
   /* ── Welcome ── */
-  #screen-welcome { padding: 2rem 1.5rem; justify-content: center; gap: 1.5rem; }
   .logo-mark { width: 52px; height: 52px; background: var(--teal-lt); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
   .logo-mark svg { width: 28px; height: 28px; }
   h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.3; }
@@ -65,10 +63,8 @@
   .info-block strong { font-weight: 600; }
   .session-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gray-lt); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text-2); }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
-  .session-badge.post .dot { background: var(--purple); }
 
   /* ── Session select ── */
-  #screen-session { padding: 2rem 1.5rem; gap: 1rem; }
   .session-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .session-card:hover { border-color: var(--teal); background: var(--teal-lt); }
   .session-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
@@ -76,8 +72,21 @@
   .session-card.pre  h3 { color: var(--blue-dk); }
   .session-card.post h3 { color: var(--purple-dk); }
 
+  /* ── Progress steps ── */
+  .step-bar { display: flex; align-items: center; padding: 1rem 1.5rem 0; }
+  .step { display: flex; align-items: center; gap: 6px; }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .step.done   .step-circle { background: var(--teal); color: #fff; }
+  .step.active .step-circle { background: var(--blue); color: #fff; }
+  .step.idle   .step-circle { background: var(--gray-lt); color: var(--text-3); }
+  .step-label { font-size: 12px; font-weight: 600; }
+  .step.done   .step-label { color: var(--teal-dk); }
+  .step.active .step-label { color: var(--blue-dk); }
+  .step.idle   .step-label { color: var(--text-3); }
+  .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
+  .step-line.done { background: var(--teal); }
+
   /* ── Instructions ── */
-  #screen-instructions { padding: 1.5rem; gap: 1rem; }
   .instr-title { font-size: 18px; font-weight: 600; }
   .instr-body { font-size: 14px; color: var(--text-2); line-height: 1.7; }
   .sequence-demo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 0.75rem 0; }
@@ -88,9 +97,21 @@
   .rules-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
   .rules-list li { font-size: 13px; color: var(--text-2); padding-left: 1.25rem; position: relative; line-height: 1.5; }
   .rules-list li::before { content: ''; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+  .part-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .part-badge.a { background: var(--blue-lt); color: var(--blue-dk); }
+  .part-badge.b { background: var(--purple-lt); color: var(--purple-dk); }
+
+  /* ── Transition ── */
+  .transition-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--teal-lt); display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+  .mini-result { background: var(--bg); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+  .mini-result-label { font-size: 13px; color: var(--text-2); }
+  .mini-result-val { font-size: 24px; font-weight: 700; color: var(--teal-dk); }
 
   /* ── Test ── */
   #screen-test { padding: 0; }
+  #test-part-label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 6px; }
+  #test-part-label.a { background: var(--blue-lt); color: var(--blue-dk); }
+  #test-part-label.b { background: var(--purple-lt); color: var(--purple-dk); }
   #stats-bar { display: flex; gap: 8px; padding: 0.75rem 1rem; background: var(--surface); border-bottom: 0.5px solid var(--border); }
   .stat-box { flex: 1; background: var(--bg); border-radius: var(--radius-sm); padding: 7px 10px; text-align: center; }
   .stat-lbl { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -99,18 +120,34 @@
   #tmt-msg { text-align: center; font-size: 13px; color: var(--text-2); padding: 0.6rem 1rem; min-height: 28px; }
 
   /* ── Results ── */
-  #screen-results { padding: 1.5rem; gap: 1rem; }
+  #screen-results { overflow-y: auto; }
   .result-header { display: flex; align-items: center; gap: 12px; }
-  .result-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--teal-lt); display: flex; align-items: center; justify-content: center; }
+  .result-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--teal-lt); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .result-icon svg { width: 22px; height: 22px; }
   .result-title { font-size: 18px; font-weight: 600; }
   .result-sub { font-size: 13px; color: var(--text-2); }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); }
   .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .metric-card { background: var(--bg); border-radius: var(--radius-sm); padding: 0.85rem 1rem; }
   .metric-lbl { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
   .metric-val { font-size: 22px; font-weight: 600; color: var(--text); }
   .metric-val.wide { font-size: 17px; }
   .score-pill { display: inline-block; border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600; }
+
+  /* Diff card */
+  .diff-card { background: var(--teal-lt); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+  .diff-card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--teal-dk); opacity: 0.7; margin-bottom: 4px; }
+  .diff-card-score { font-size: 30px; font-weight: 700; color: var(--teal-dk); }
+  .diff-card-sub { font-size: 11px; color: var(--teal-dk); opacity: 0.6; margin-bottom: 8px; }
+  .diff-card-explain { font-size: 13px; color: var(--teal-dk); line-height: 1.6; opacity: 0.85; }
+
+  /* RT card */
+  .rt-card { background: var(--amber-lt); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+  .rt-label { font-size: 13px; font-weight: 600; color: var(--amber-dk); }
+  .rt-sub { font-size: 11px; color: var(--amber-dk); opacity: 0.7; margin-top: 2px; }
+  .rt-val { font-size: 18px; font-weight: 700; color: var(--amber-dk); text-align: right; }
+  .rt-val-label { font-size: 10px; color: var(--amber-dk); opacity: 0.6; text-align: right; }
+
   .sync-status { display: flex; align-items: center; gap: 8px; font-size: 13px; border-radius: var(--radius-sm); padding: 0.75rem 1rem; }
   .sync-status.saving  { background: var(--amber-lt); color: var(--amber-dk); }
   .sync-status.saved   { background: var(--teal-lt);  color: var(--teal-dk); }
@@ -129,12 +166,10 @@
   .btn-primary:hover { opacity: 0.9; }
   .btn-secondary { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
   .btn-secondary:hover { background: var(--bg); }
-  .btn-sm { width: auto; padding: 9px 18px; font-size: 14px; }
-  .btn-row { display: flex; gap: 8px; }
 
-  /* ── Utility ── */
   .spacer { flex: 1; }
   hr { border: none; border-top: 0.5px solid var(--border); }
+  .pad { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; }
 </style>
 </head>
 <body>
@@ -142,120 +177,205 @@
 
   <!-- ══ WELCOME ══ -->
   <div id="screen-welcome" class="screen active">
-    <div class="logo-mark">
-      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="7" cy="7" r="5" fill="#1D9E75"/>
-        <circle cx="21" cy="7" r="5" fill="#7F77DD"/>
-        <circle cx="7" cy="21" r="5" fill="#378ADD"/>
-        <circle cx="21" cy="21" r="5" fill="#1D9E75" opacity="0.4"/>
-        <line x1="12" y1="7" x2="16" y2="7" stroke="#1a1a18" stroke-width="1.5"/>
-        <line x1="7" y1="12" x2="7" y2="16" stroke="#1a1a18" stroke-width="1.5"/>
-      </svg>
+    <div class="pad" style="justify-content:center;">
+      <div class="logo-mark">
+        <svg viewBox="0 0 28 28" fill="none"><circle cx="7" cy="7" r="5" fill="#1D9E75"/><circle cx="21" cy="7" r="5" fill="#7F77DD"/><circle cx="7" cy="21" r="5" fill="#378ADD"/><circle cx="21" cy="21" r="5" fill="#1D9E75" opacity="0.4"/><line x1="12" y1="7" x2="16" y2="7" stroke="#1a1a18" stroke-width="1.5"/><line x1="7" y1="12" x2="7" y2="16" stroke="#1a1a18" stroke-width="1.5"/></svg>
+      </div>
+      <h1>Trail Making Test<br>Parts A & B</h1>
+      <p class="welcome-sub">A two-part cognitive assessment. Part A measures motor speed; Part B measures cognitive flexibility. The difference between them is your set-shifting score.</p>
+      <div class="info-block">
+        <p><strong>Takes about 3–5 minutes.</strong> Complete both parts back-to-back. Results are anonymous — a unique device ID links your pre and post scores for comparison.</p>
+      </div>
+      <div class="session-badge"><span class="dot"></span><span id="id-text">Loading ID…</span></div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="showScreen('session')">Continue</button>
     </div>
-    <h1>Trail Making Test<br>Part B</h1>
-    <p class="welcome-sub">A brief cognitive assessment that takes about 2–3 minutes. Connect numbered and lettered circles in alternating order as quickly as you can.</p>
-    <div class="info-block">
-      <p><strong>Your results are anonymous.</strong> A unique ID is generated for your device so your pre- and post-retreat scores can be compared without storing any personal information.</p>
-    </div>
-    <div id="device-id-display" class="session-badge">
-      <span class="dot"></span>
-      <span id="id-text">Loading ID…</span>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn btn-primary" onclick="showScreen('session')">Continue</button>
   </div>
 
   <!-- ══ SESSION TYPE ══ -->
   <div id="screen-session" class="screen">
-    <h2 style="font-size:17px;font-weight:600;">When are you taking this test?</h2>
-    <p style="font-size:14px;color:var(--text-2);">This helps us compare your scores correctly.</p>
-    <div class="session-card pre" onclick="selectSession('pre')">
-      <h3>Before the retreat</h3>
-      <p>Baseline measurement — taken before your retreat begins.</p>
+    <div class="pad">
+      <h2 style="font-size:17px;font-weight:600;">When are you taking this test?</h2>
+      <p style="font-size:14px;color:var(--text-2);">This helps us compare your scores correctly.</p>
+      <div class="session-card pre" onclick="selectSession('pre')">
+        <h3>Before the retreat</h3>
+        <p>Baseline measurement — taken before your retreat begins.</p>
+      </div>
+      <div class="session-card post" onclick="selectSession('post')">
+        <h3>After the retreat</h3>
+        <p>Follow-up measurement — taken after your retreat has ended.</p>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" onclick="showScreen('welcome')">Back</button>
     </div>
-    <div class="session-card post" onclick="selectSession('post')">
-      <h3>After the retreat</h3>
-      <p>Follow-up measurement — taken after your retreat has ended.</p>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn btn-secondary" onclick="showScreen('welcome')">Back</button>
   </div>
 
-  <!-- ══ INSTRUCTIONS ══ -->
-  <div id="screen-instructions" class="screen">
-    <p class="instr-title">How to complete the test</p>
-    <p class="instr-body">Tap the circles in order, alternating between numbers and letters:</p>
-    <div class="sequence-demo">
-      <div class="demo-node num">1</div><span class="demo-arrow">→</span>
-      <div class="demo-node let">A</div><span class="demo-arrow">→</span>
-      <div class="demo-node num">2</div><span class="demo-arrow">→</span>
-      <div class="demo-node let">B</div><span class="demo-arrow">→</span>
-      <div class="demo-node num">3</div><span class="demo-arrow">→</span>
-      <div class="demo-node let">C</div><span class="demo-arrow">→</span>
-      <span style="font-size:13px;color:var(--text-3);">…and so on</span>
+  <!-- ══ INSTRUCTIONS A ══ -->
+  <div id="screen-instructions-a" class="screen">
+    <div class="step-bar">
+      <div class="step active"><div class="step-circle">A</div><span class="step-label">Part A</span></div>
+      <div class="step-line"></div>
+      <div class="step idle"><div class="step-circle">B</div><span class="step-label">Part B</span></div>
     </div>
-    <ul class="rules-list">
-      <li>Work as <strong>quickly</strong> as you can without making mistakes.</li>
-      <li>If you tap the wrong circle it counts as an error — just keep going.</li>
-      <li>The timer starts as soon as you tap circle <strong>1</strong>.</li>
-      <li>There are 25 circles total (numbers 1–13, letters A–L).</li>
-    </ul>
-    <div class="spacer"></div>
-    <button class="btn btn-primary" id="start-btn" onclick="startTest()">Start test</button>
-    <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('session')">Back</button>
+    <div class="pad">
+      <div class="part-badge a">Part A — Numbers only</div>
+      <p class="instr-title">Connect the numbers in order</p>
+      <p class="instr-body">Tap all 25 circles in numerical order, as quickly as you can:</p>
+      <div class="sequence-demo">
+        <div class="demo-node num">1</div><span class="demo-arrow">→</span>
+        <div class="demo-node num">2</div><span class="demo-arrow">→</span>
+        <div class="demo-node num">3</div><span class="demo-arrow">→</span>
+        <div class="demo-node num">4</div><span class="demo-arrow">→</span>
+        <span style="font-size:13px;color:var(--text-3);">…up to 25</span>
+      </div>
+      <ul class="rules-list">
+        <li>Work as <strong>quickly</strong> as you can without making mistakes.</li>
+        <li>Tapping the wrong circle counts as an error — just keep going.</li>
+        <li>The clock starts immediately — tap <strong>1</strong> as fast as you can.</li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="startTest('A')">Start Part A</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('session')">Back</button>
+    </div>
+  </div>
+
+  <!-- ══ TRANSITION ══ -->
+  <div id="screen-transition" class="screen">
+    <div class="pad" style="justify-content:center; text-align:center;">
+      <div class="transition-icon">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M6 16l7 7 13-13" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:600;">Part A complete!</h2>
+      <p style="font-size:14px;color:var(--text-2);line-height:1.6;">Good work. Take a breath. Part B is next — this time alternate between numbers and letters.</p>
+      <div class="mini-result">
+        <div style="text-align:left;">
+          <div class="mini-result-label">Part A time</div>
+          <div style="font-size:11px;color:var(--text-3);" id="trans-rt">Reaction time: —</div>
+        </div>
+        <div class="mini-result-val" id="trans-time">—</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="showScreen('instructions-b')">Continue to Part B</button>
+    </div>
+  </div>
+
+  <!-- ══ INSTRUCTIONS B ══ -->
+  <div id="screen-instructions-b" class="screen">
+    <div class="step-bar">
+      <div class="step done"><div class="step-circle">✓</div><span class="step-label">Part A</span></div>
+      <div class="step-line done"></div>
+      <div class="step active"><div class="step-circle">B</div><span class="step-label">Part B</span></div>
+    </div>
+    <div class="pad">
+      <div class="part-badge b">Part B — Numbers & Letters</div>
+      <p class="instr-title">Alternate between numbers and letters</p>
+      <p class="instr-body">Tap circles in order, switching between numbers and letters:</p>
+      <div class="sequence-demo">
+        <div class="demo-node num">1</div><span class="demo-arrow">→</span>
+        <div class="demo-node let">A</div><span class="demo-arrow">→</span>
+        <div class="demo-node num">2</div><span class="demo-arrow">→</span>
+        <div class="demo-node let">B</div><span class="demo-arrow">→</span>
+        <div class="demo-node num">3</div><span class="demo-arrow">→</span>
+        <div class="demo-node let">C</div>
+      </div>
+      <ul class="rules-list">
+        <li>Work as <strong>quickly</strong> as you can without making mistakes.</li>
+        <li>Tapping the wrong circle counts as an error — just keep going.</li>
+        <li>The clock starts immediately — tap <strong>1</strong> as fast as you can.</li>
+        <li>There are 25 circles total (numbers 1–13, letters A–L).</li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="startTest('B')">Start Part B</button>
+    </div>
   </div>
 
   <!-- ══ TEST ══ -->
   <div id="screen-test" class="screen">
+    <div id="test-part-label" class="a">PART A</div>
     <div id="stats-bar">
       <div class="stat-box"><div class="stat-lbl">Time</div><div class="stat-num" id="stat-time">0.0s</div></div>
       <div class="stat-box"><div class="stat-lbl">Progress</div><div class="stat-num" id="stat-prog">0/25</div></div>
       <div class="stat-box"><div class="stat-lbl">Errors</div><div class="stat-num" id="stat-err">0</div></div>
     </div>
     <canvas id="tmt-canvas"></canvas>
-    <p id="tmt-msg">Tap <strong>1</strong> to begin</p>
+    <p id="tmt-msg">Tap <strong>1</strong> as fast as you can</p>
   </div>
 
   <!-- ══ RESULTS ══ -->
   <div id="screen-results" class="screen">
-    <div class="result-header">
-      <div class="result-icon">
-        <svg viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="pad">
+      <div class="result-header">
+        <div class="result-icon">
+          <svg viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <p class="result-title">Both parts complete</p>
+          <p class="result-sub" id="result-session-label">Pre-retreat baseline</p>
+        </div>
       </div>
-      <div>
-        <p class="result-title">Test complete</p>
-        <p class="result-sub" id="result-session-label">Pre-retreat baseline</p>
+
+      <!-- KEY METRIC: B-A difference -->
+      <div class="diff-card">
+        <div class="diff-card-title">Cognitive Flexibility Score</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="diff-card-score" id="res-diff">—</div>
+            <div class="diff-card-sub">B minus A (lower = better set-shifting)</div>
+          </div>
+          <div id="res-diff-pill" style="padding-top:4px;"></div>
+        </div>
+        <div class="diff-card-explain" id="res-diff-explain"></div>
       </div>
+
+      <!-- Reaction times -->
+      <div class="rt-card">
+        <div>
+          <div class="rt-label">Reaction Time to Circle 1</div>
+          <div class="rt-sub">Attention & readiness at test start</div>
+        </div>
+        <div>
+          <div class="rt-val-label">Part A &nbsp;/&nbsp; Part B</div>
+          <div class="rt-val" id="res-rt">— / —</div>
+        </div>
+      </div>
+
+      <p class="section-label">Part A — Motor speed</p>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-lbl">Time</div><div class="metric-val" id="res-a-time">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Errors</div><div class="metric-val" id="res-a-errors">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Accuracy</div><div class="metric-val" id="res-a-acc">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Performance</div><div class="metric-val wide" id="res-a-score">—</div></div>
+      </div>
+
+      <p class="section-label">Part B — Set-shifting</p>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-lbl">Time</div><div class="metric-val" id="res-b-time">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Errors</div><div class="metric-val" id="res-b-errors">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Accuracy</div><div class="metric-val" id="res-b-acc">—</div></div>
+        <div class="metric-card"><div class="metric-lbl">Performance</div><div class="metric-val wide" id="res-b-score">—</div></div>
+      </div>
+
+      <div id="sync-box" class="sync-status saving">
+        <div class="sync-dot"></div>
+        <span id="sync-msg">Saving results…</span>
+      </div>
+      <p class="id-note">Results saved anonymously under device ID <strong id="id-inline">—</strong>.</p>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="showScreen('session')">Take test again</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('welcome')">Back to start</button>
     </div>
-    <div class="metrics-grid">
-      <div class="metric-card"><div class="metric-lbl">Completion time</div><div class="metric-val" id="res-time">—</div></div>
-      <div class="metric-card"><div class="metric-lbl">Errors</div><div class="metric-val" id="res-errors">—</div></div>
-      <div class="metric-card"><div class="metric-lbl">Accuracy</div><div class="metric-val" id="res-acc">—</div></div>
-      <div class="metric-card"><div class="metric-lbl">Performance</div><div class="metric-val wide" id="res-score">—</div></div>
-    </div>
-    <div id="sync-box" class="sync-status saving">
-      <div class="sync-dot"></div>
-      <span id="sync-msg">Saving results…</span>
-    </div>
-    <p class="id-note">Results are saved anonymously under device ID <strong id="id-inline">—</strong>. The retreat team can match your pre and post scores using this ID.</p>
-    <div class="spacer"></div>
-    <button class="btn btn-primary" onclick="retake()">Take test again</button>
-    <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('welcome')">Back to start</button>
   </div>
 
 </div>
-
 <script>
 // ══════════════════════════════════════════════
-//  CONFIGURATION — fill these in before deploying
-// ══════════════════════════════════════════════
-const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF20GZ491TC54RLFLc-fciBY6za3WPmyvXDY9D9u_A7bYNODceK-HlIiMOSr359COjEA/exec';
+const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjT2nqWC0DS9VOTnzbFN-oNTtmlMOdnCKkPud4p-U3gg3tsA4Ox-njdp32FjdplWCgJw/exec';
 // ══════════════════════════════════════════════
 
 const TOTAL = 25;
 const R = 22;
 
-// ── Device ID (persistent across sessions) ──
+// ── Device ID ──
 function getDeviceId() {
   let id = localStorage.getItem('tmt_device_id');
   if (!id) {
@@ -271,25 +391,33 @@ document.getElementById('id-inline').textContent = DEVICE_ID;
 
 // ── State ──
 let sessionType = 'pre';
+let currentPart = 'A';
 let nodes = [], lines = [], errors = 0, nextIdx = 0;
 let started = false, finished = false;
 let startTime = null, elapsed = 0, timerInterval = null;
+let screenReadyTime = null;
+let reactionTime = null;
+let resultA = null;
+let resultB = null;
 
 // ── Screen management ──
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
+  if (id === 'test') screenReadyTime = performance.now();
 }
 
 function selectSession(type) {
   sessionType = type;
   document.getElementById('result-session-label').textContent =
     type === 'pre' ? 'Pre-retreat baseline' : 'Post-retreat follow-up';
-  showScreen('instructions');
+  resultA = null; resultB = null;
+  showScreen('instructions-a');
 }
 
 // ── Node labels ──
-function getLabel(i) {
+function getLabel(part, i) {
+  if (part === 'A') return String(i + 1);
   const nums = ['1','2','3','4','5','6','7','8','9','10','11','12','13'];
   const lets = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   const seq = [];
@@ -298,7 +426,7 @@ function getLabel(i) {
 }
 function isLetter(l) { return isNaN(parseInt(l)); }
 
-// ── Canvas setup ──
+// ── Canvas ──
 const canvas = document.getElementById('tmt-canvas');
 const ctx = canvas.getContext('2d');
 
@@ -326,7 +454,7 @@ function placeNodes(w, h) {
       ok = nodes.every(n => Math.hypot(n.x - x, n.y - y) > R * 2.7);
       attempts++;
     } while (!ok && attempts < 5000);
-    nodes.push({ x, y, label: getLabel(i), done: false });
+    nodes.push({ x, y, label: getLabel(currentPart, i), done: false });
   }
 }
 
@@ -336,9 +464,9 @@ function draw() {
   const h = canvas.height / dpr;
   ctx.clearRect(0, 0, w, h);
 
-  // Lines
+  const lineColor = currentPart === 'A' ? '#378ADD' : '#1D9E75';
   ctx.lineWidth = 2.5;
-  ctx.strokeStyle = '#1D9E75';
+  ctx.strokeStyle = lineColor;
   ctx.setLineDash([]);
   for (let i = 1; i < lines.length; i++) {
     ctx.beginPath();
@@ -347,27 +475,26 @@ function draw() {
     ctx.stroke();
   }
 
-  // Nodes
   nodes.forEach((n, i) => {
     const isNext = i === nextIdx && started && !finished;
     let fill, stroke, text;
-    if (n.done)       { fill = '#9FE1CB'; stroke = '#0F6E56'; text = '#04342C'; }
-    else if (isNext)  { fill = '#FAC775'; stroke = '#854F0B'; text = '#412402'; }
+    if (n.done) {
+      fill   = currentPart === 'A' ? '#9DCEF4' : '#9FE1CB';
+      stroke = currentPart === 'A' ? '#185FA5' : '#0F6E56';
+      text   = currentPart === 'A' ? '#042C53' : '#04342C';
+    } else if (isNext)  { fill = '#FAC775'; stroke = '#854F0B'; text = '#412402'; }
     else if (isLetter(n.label)) { fill = '#CECBF6'; stroke = '#534AB7'; text = '#26215C'; }
-    else              { fill = '#B5D4F4'; stroke = '#185FA5'; text = '#042C53'; }
+    else { fill = '#B5D4F4'; stroke = '#185FA5'; text = '#042C53'; }
 
     ctx.beginPath();
     ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
-    ctx.fillStyle = fill;
-    ctx.fill();
+    ctx.fillStyle = fill; ctx.fill();
     ctx.strokeStyle = stroke;
     ctx.lineWidth = isNext ? 2.5 : 1.5;
     ctx.stroke();
-
     ctx.fillStyle = text;
     ctx.font = `600 ${n.label.length > 1 ? '12' : '14'}px -apple-system, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(n.label, n.x, n.y);
   });
 }
@@ -394,6 +521,9 @@ function handleTap(e) {
   if (hit === null) return;
   const msg = document.getElementById('tmt-msg');
   if (hit === nextIdx) {
+    if (nextIdx === 0 && screenReadyTime !== null) {
+      reactionTime = (performance.now() - screenReadyTime) / 1000;
+    }
     nodes[hit].done = true;
     lines.push({ x: nodes[hit].x, y: nodes[hit].y });
     nextIdx++;
@@ -401,7 +531,7 @@ function handleTap(e) {
     if (nextIdx >= TOTAL) {
       finished = true;
       clearInterval(timerInterval);
-      showResults();
+      finishPart();
     } else {
       msg.innerHTML = 'Next: <strong>' + nodes[nextIdx].label + '</strong>';
     }
@@ -418,14 +548,20 @@ canvas.addEventListener('touchstart', handleTap, { passive: false });
 canvas.addEventListener('mousedown',  handleTap);
 
 // ── Start test ──
-function startTest() {
+function startTest(part) {
+  currentPart = part;
+  const lbl = document.getElementById('test-part-label');
+  lbl.textContent = 'PART ' + part;
+  lbl.className = part === 'A' ? 'a' : 'b';
+
   showScreen('test');
   clearInterval(timerInterval);
-  elapsed = 0; errors = 0; nextIdx = 0; started = false; finished = false; lines = [];
+  elapsed = 0; errors = 0; nextIdx = 0; started = false; finished = false;
+  lines = []; reactionTime = null;
   document.getElementById('stat-time').textContent = '0.0s';
   document.getElementById('stat-prog').textContent = '0/25';
   document.getElementById('stat-err').textContent  = '0';
-  document.getElementById('tmt-msg').innerHTML = 'Tap <strong>1</strong> to begin';
+  document.getElementById('tmt-msg').innerHTML = 'Tap <strong>1</strong> as fast as you can';
 
   const { w, h } = setupCanvas();
   placeNodes(w, h);
@@ -439,21 +575,97 @@ function startTest() {
   }, 100);
 }
 
-function retake() {
-  showScreen('session');
+// ── Finish part ──
+function finishPart() {
+  const t = elapsed;
+  const acc = Math.round((TOTAL / (TOTAL + errors)) * 100);
+  const cat = normScore(currentPart, t);
+  const rt = reactionTime;
+
+  if (currentPart === 'A') {
+    resultA = { t, errors, acc, cat, rt };
+    document.getElementById('trans-time').textContent = formatTime(t);
+    document.getElementById('trans-rt').textContent = 'Reaction time: ' + (rt ? rt.toFixed(2) + 's' : '—');
+    showScreen('transition');
+  } else {
+    resultB = { t, errors, acc, cat, rt };
+    showFinalResults();
+  }
 }
 
-// ── Formatting helpers ──
+// ── Final results ──
+function showFinalResults() {
+  const A = resultA, B = resultB;
+
+  // Part A
+  document.getElementById('res-a-time').textContent   = formatTime(A.t);
+  document.getElementById('res-a-errors').textContent = A.errors;
+  document.getElementById('res-a-acc').textContent    = A.acc + '%';
+  const cA = scoreColors(A.cat);
+  document.getElementById('res-a-score').innerHTML =
+    `<span class="score-pill" style="background:${cA.bg};color:${cA.color}">${A.cat}</span>`;
+
+  // Part B
+  document.getElementById('res-b-time').textContent   = formatTime(B.t);
+  document.getElementById('res-b-errors').textContent = B.errors;
+  document.getElementById('res-b-acc').textContent    = B.acc + '%';
+  const cB = scoreColors(B.cat);
+  document.getElementById('res-b-score').innerHTML =
+    `<span class="score-pill" style="background:${cB.bg};color:${cB.color}">${B.cat}</span>`;
+
+  // B-A diff
+  const diff = B.t - A.t;
+  const diffCat = diffCategory(diff);
+  const dC = scoreColors(diffCat);
+  document.getElementById('res-diff').textContent = formatTime(diff);
+  document.getElementById('res-diff-pill').innerHTML =
+    `<span class="score-pill" style="background:${dC.bg};color:${dC.color}">${diffCat}</span>`;
+  document.getElementById('res-diff-explain').textContent = diffExplain(diff);
+
+  // Reaction times
+  const rtA = A.rt ? A.rt.toFixed(2) + 's' : '—';
+  const rtB = B.rt ? B.rt.toFixed(2) + 's' : '—';
+  document.getElementById('res-rt').textContent = rtA + ' / ' + rtB;
+
+  showScreen('results');
+  saveToSheets(A, B);
+}
+
+// ── Helpers ──
 function formatTime(s) {
   return s < 60 ? s.toFixed(1) + 's' : Math.floor(s / 60) + 'm ' + (s % 60).toFixed(0) + 's';
 }
 
-function normScore(t) {
-  if (t <= 60)  return 'Excellent';
-  if (t <= 90)  return 'Above average';
-  if (t <= 120) return 'Average';
-  if (t <= 180) return 'Below average';
+function normScore(part, t) {
+  if (part === 'A') {
+    if (t <= 29)  return 'Excellent';
+    if (t <= 40)  return 'Above average';
+    if (t <= 58)  return 'Average';
+    if (t <= 90)  return 'Below average';
+    return 'Impaired range';
+  } else {
+    if (t <= 60)  return 'Excellent';
+    if (t <= 90)  return 'Above average';
+    if (t <= 120) return 'Average';
+    if (t <= 180) return 'Below average';
+    return 'Impaired range';
+  }
+}
+
+function diffCategory(diff) {
+  if (diff <= 30)  return 'Excellent';
+  if (diff <= 50)  return 'Above average';
+  if (diff <= 80)  return 'Average';
+  if (diff <= 120) return 'Below average';
   return 'Impaired range';
+}
+
+function diffExplain(diff) {
+  if (diff <= 30)  return 'Very efficient set-shifting. The small gap between A and B suggests strong cognitive flexibility.';
+  if (diff <= 50)  return 'Good cognitive flexibility. The B-A gap is within the above-average range.';
+  if (diff <= 80)  return 'Average set-shifting ability. The B-A gap reflects typical cognitive flexibility.';
+  if (diff <= 120) return 'The B-A gap is larger than average, suggesting some difficulty with task-switching.';
+  return 'The B-A gap is notably large, which may indicate reduced cognitive flexibility.';
 }
 
 function scoreColors(cat) {
@@ -467,37 +679,29 @@ function scoreColors(cat) {
   return map[cat] || { bg: '#F1EFE8', color: '#2C2C2A' };
 }
 
-// ── Show results ──
-function showResults() {
-  const t = elapsed;
-  const acc = Math.round((TOTAL / (TOTAL + errors)) * 100);
-  const cat = normScore(t);
-  const c = scoreColors(cat);
-
-  document.getElementById('res-time').textContent   = formatTime(t);
-  document.getElementById('res-errors').textContent = errors;
-  document.getElementById('res-acc').textContent    = acc + '%';
-  document.getElementById('res-score').innerHTML =
-    `<span class="score-pill" style="background:${c.bg};color:${c.color}">${cat}</span>`;
-
-  showScreen('results');
-  saveToSheets({ t, acc, cat });
-}
-
-// ── Save to Google Sheets ──
-async function saveToSheets(result) {
+// ── Save to Sheets ──
+async function saveToSheets(A, B) {
   const syncBox = document.getElementById('sync-box');
   const syncMsg = document.getElementById('sync-msg');
+  const diff = B.t - A.t;
 
   const params = new URLSearchParams({
-    deviceId:    DEVICE_ID,
-    sessionType: sessionType,
-    timestamp:   new Date().toISOString(),
-    timeSeconds: parseFloat(result.t.toFixed(2)),
-    errors:      errors,
-    accuracy:    result.acc,
-    performance: result.cat,
-    userAgent:   navigator.userAgent.substring(0, 80)
+    deviceId:      DEVICE_ID,
+    sessionType:   sessionType,
+    timestamp:     new Date().toISOString(),
+    aTime:         parseFloat(A.t.toFixed(2)),
+    aErrors:       A.errors,
+    aAccuracy:     A.acc,
+    aPerformance:  A.cat,
+    aReactionTime: A.rt ? parseFloat(A.rt.toFixed(3)) : '',
+    bTime:         parseFloat(B.t.toFixed(2)),
+    bErrors:       B.errors,
+    bAccuracy:     B.acc,
+    bPerformance:  B.cat,
+    bReactionTime: B.rt ? parseFloat(B.rt.toFixed(3)) : '',
+    diffScore:     parseFloat(diff.toFixed(2)),
+    diffCategory:  diffCategory(diff),
+    userAgent:     navigator.userAgent.substring(0, 80)
   });
 
   try {
