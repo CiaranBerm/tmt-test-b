@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Trail Making Test — Part B</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:    #1D9E75;
+    --teal-lt: #E1F5EE;
+    --teal-dk: #04342C;
+    --amber:   #EF9F27;
+    --amber-lt:#FAEEDA;
+    --amber-dk:#412402;
+    --blue:    #378ADD;
+    --blue-lt: #E6F1FB;
+    --blue-dk: #042C53;
+    --purple:  #7F77DD;
+    --purple-lt:#EEEDFE;
+    --purple-dk:#26215C;
+    --red:     #E24B4A;
+    --red-lt:  #FCEBEB;
+    --red-dk:  #501313;
+    --green:   #639922;
+    --green-lt:#EAF3DE;
+    --green-dk:#173404;
+    --gray:    #888780;
+    --gray-lt: #F1EFE8;
+    --text:    #1a1a18;
+    --text-2:  #5F5E5A;
+    --text-3:  #888780;
+    --border:  rgba(0,0,0,0.12);
+    --surface: #ffffff;
+    --bg:      #F7F6F2;
+    --radius:  12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #app { width: 100%; max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; background: var(--surface); }
+
+  /* ── Screens ── */
+  .screen { display: none; flex-direction: column; flex: 1; }
+  .screen.active { display: flex; }
+
+  /* ── Welcome ── */
+  #screen-welcome { padding: 2rem 1.5rem; justify-content: center; gap: 1.5rem; }
+  .logo-mark { width: 52px; height: 52px; background: var(--teal-lt); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 28px; height: 28px; }
+  h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.3; }
+  .welcome-sub { font-size: 15px; color: var(--text-2); line-height: 1.6; }
+  .info-block { background: var(--blue-lt); border-radius: var(--radius-sm); padding: 1rem 1.1rem; }
+  .info-block p { font-size: 13px; color: var(--blue-dk); line-height: 1.6; }
+  .info-block strong { font-weight: 600; }
+  .session-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gray-lt); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text-2); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+  .session-badge.post .dot { background: var(--purple); }
+
+  /* ── Session select ── */
+  #screen-session { padding: 2rem 1.5rem; gap: 1rem; }
+  .session-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .session-card:hover { border-color: var(--teal); background: var(--teal-lt); }
+  .session-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .session-card p  { font-size: 13px; color: var(--text-2); }
+  .session-card.pre  h3 { color: var(--blue-dk); }
+  .session-card.post h3 { color: var(--purple-dk); }
+
+  /* ── Instructions ── */
+  #screen-instructions { padding: 1.5rem; gap: 1rem; }
+  .instr-title { font-size: 18px; font-weight: 600; }
+  .instr-body { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+  .sequence-demo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 0.75rem 0; }
+  .demo-node { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+  .demo-node.num { background: var(--blue-lt); color: var(--blue-dk); border: 1.5px solid var(--blue); }
+  .demo-node.let { background: var(--purple-lt); color: var(--purple-dk); border: 1.5px solid var(--purple); }
+  .demo-arrow { color: var(--text-3); font-size: 14px; }
+  .rules-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rules-list li { font-size: 13px; color: var(--text-2); padding-left: 1.25rem; position: relative; line-height: 1.5; }
+  .rules-list li::before { content: ''; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+
+  /* ── Test ── */
+  #screen-test { padding: 0; }
+  #stats-bar { display: flex; gap: 8px; padding: 0.75rem 1rem; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  .stat-box { flex: 1; background: var(--bg); border-radius: var(--radius-sm); padding: 7px 10px; text-align: center; }
+  .stat-lbl { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-num { font-size: 17px; font-weight: 600; color: var(--text); }
+  #tmt-canvas { display: block; width: 100%; touch-action: none; }
+  #tmt-msg { text-align: center; font-size: 13px; color: var(--text-2); padding: 0.6rem 1rem; min-height: 28px; }
+
+  /* ── Results ── */
+  #screen-results { padding: 1.5rem; gap: 1rem; }
+  .result-header { display: flex; align-items: center; gap: 12px; }
+  .result-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--teal-lt); display: flex; align-items: center; justify-content: center; }
+  .result-icon svg { width: 22px; height: 22px; }
+  .result-title { font-size: 18px; font-weight: 600; }
+  .result-sub { font-size: 13px; color: var(--text-2); }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric-card { background: var(--bg); border-radius: var(--radius-sm); padding: 0.85rem 1rem; }
+  .metric-lbl { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 600; color: var(--text); }
+  .metric-val.wide { font-size: 17px; }
+  .score-pill { display: inline-block; border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600; }
+  .sync-status { display: flex; align-items: center; gap: 8px; font-size: 13px; border-radius: var(--radius-sm); padding: 0.75rem 1rem; }
+  .sync-status.saving  { background: var(--amber-lt); color: var(--amber-dk); }
+  .sync-status.saved   { background: var(--teal-lt);  color: var(--teal-dk); }
+  .sync-status.error   { background: var(--red-lt);   color: var(--red-dk); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sync-status.saving .sync-dot  { background: var(--amber); animation: pulse 1s infinite; }
+  .sync-status.saved  .sync-dot  { background: var(--teal); }
+  .sync-status.error  .sync-dot  { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .id-note { font-size: 11px; color: var(--text-3); line-height: 1.5; padding: 0 0.25rem; }
+
+  /* ── Buttons ── */
+  .btn { width: 100%; padding: 13px; border-radius: var(--radius); border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-sm { width: auto; padding: 9px 18px; font-size: 14px; }
+  .btn-row { display: flex; gap: 8px; }
+
+  /* ── Utility ── */
+  .spacer { flex: 1; }
+  hr { border: none; border-top: 0.5px solid var(--border); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ WELCOME ══ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="7" cy="7" r="5" fill="#1D9E75"/>
+        <circle cx="21" cy="7" r="5" fill="#7F77DD"/>
+        <circle cx="7" cy="21" r="5" fill="#378ADD"/>
+        <circle cx="21" cy="21" r="5" fill="#1D9E75" opacity="0.4"/>
+        <line x1="12" y1="7" x2="16" y2="7" stroke="#1a1a18" stroke-width="1.5"/>
+        <line x1="7" y1="12" x2="7" y2="16" stroke="#1a1a18" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <h1>Trail Making Test<br>Part B</h1>
+    <p class="welcome-sub">A brief cognitive assessment that takes about 2–3 minutes. Connect numbered and lettered circles in alternating order as quickly as you can.</p>
+    <div class="info-block">
+      <p><strong>Your results are anonymous.</strong> A unique ID is generated for your device so your pre- and post-retreat scores can be compared without storing any personal information.</p>
+    </div>
+    <div id="device-id-display" class="session-badge">
+      <span class="dot"></span>
+      <span id="id-text">Loading ID…</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="showScreen('session')">Continue</button>
+  </div>
+
+  <!-- ══ SESSION TYPE ══ -->
+  <div id="screen-session" class="screen">
+    <h2 style="font-size:17px;font-weight:600;">When are you taking this test?</h2>
+    <p style="font-size:14px;color:var(--text-2);">This helps us compare your scores correctly.</p>
+    <div class="session-card pre" onclick="selectSession('pre')">
+      <h3>Before the retreat</h3>
+      <p>Baseline measurement — taken before your retreat begins.</p>
+    </div>
+    <div class="session-card post" onclick="selectSession('post')">
+      <h3>After the retreat</h3>
+      <p>Follow-up measurement — taken after your retreat has ended.</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary" onclick="showScreen('welcome')">Back</button>
+  </div>
+
+  <!-- ══ INSTRUCTIONS ══ -->
+  <div id="screen-instructions" class="screen">
+    <p class="instr-title">How to complete the test</p>
+    <p class="instr-body">Tap the circles in order, alternating between numbers and letters:</p>
+    <div class="sequence-demo">
+      <div class="demo-node num">1</div><span class="demo-arrow">→</span>
+      <div class="demo-node let">A</div><span class="demo-arrow">→</span>
+      <div class="demo-node num">2</div><span class="demo-arrow">→</span>
+      <div class="demo-node let">B</div><span class="demo-arrow">→</span>
+      <div class="demo-node num">3</div><span class="demo-arrow">→</span>
+      <div class="demo-node let">C</div><span class="demo-arrow">→</span>
+      <span style="font-size:13px;color:var(--text-3);">…and so on</span>
+    </div>
+    <ul class="rules-list">
+      <li>Work as <strong>quickly</strong> as you can without making mistakes.</li>
+      <li>If you tap the wrong circle it counts as an error — just keep going.</li>
+      <li>The timer starts as soon as you tap circle <strong>1</strong>.</li>
+      <li>There are 25 circles total (numbers 1–13, letters A–L).</li>
+    </ul>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="start-btn" onclick="startTest()">Start test</button>
+    <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('session')">Back</button>
+  </div>
+
+  <!-- ══ TEST ══ -->
+  <div id="screen-test" class="screen">
+    <div id="stats-bar">
+      <div class="stat-box"><div class="stat-lbl">Time</div><div class="stat-num" id="stat-time">0.0s</div></div>
+      <div class="stat-box"><div class="stat-lbl">Progress</div><div class="stat-num" id="stat-prog">0/25</div></div>
+      <div class="stat-box"><div class="stat-lbl">Errors</div><div class="stat-num" id="stat-err">0</div></div>
+    </div>
+    <canvas id="tmt-canvas"></canvas>
+    <p id="tmt-msg">Tap <strong>1</strong> to begin</p>
+  </div>
+
+  <!-- ══ RESULTS ══ -->
+  <div id="screen-results" class="screen">
+    <div class="result-header">
+      <div class="result-icon">
+        <svg viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <p class="result-title">Test complete</p>
+        <p class="result-sub" id="result-session-label">Pre-retreat baseline</p>
+      </div>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-lbl">Completion time</div><div class="metric-val" id="res-time">—</div></div>
+      <div class="metric-card"><div class="metric-lbl">Errors</div><div class="metric-val" id="res-errors">—</div></div>
+      <div class="metric-card"><div class="metric-lbl">Accuracy</div><div class="metric-val" id="res-acc">—</div></div>
+      <div class="metric-card"><div class="metric-lbl">Performance</div><div class="metric-val wide" id="res-score">—</div></div>
+    </div>
+    <div id="sync-box" class="sync-status saving">
+      <div class="sync-dot"></div>
+      <span id="sync-msg">Saving results…</span>
+    </div>
+    <p class="id-note">Results are saved anonymously under device ID <strong id="id-inline">—</strong>. The retreat team can match your pre and post scores using this ID.</p>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="retake()">Take test again</button>
+    <button class="btn btn-secondary" style="margin-top:8px;" onclick="showScreen('welcome')">Back to start</button>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIGURATION — fill these in before deploying
+// ══════════════════════════════════════════════
+const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzK3Lw_37hkwScw0DlaIXfxOn1-f2DyJsWdMmJz7OfawKKWjEcQiqFXOkmU3tUd2UD8A/exec';
+// See README: deploy a Google Apps Script Web App and paste its URL above.
+// ══════════════════════════════════════════════
+
+const TOTAL = 25;
+const R = 22;
+
+// ── Device ID (persistent across sessions) ──
+function getDeviceId() {
+  let id = localStorage.getItem('tmt_device_id');
+  if (!id) {
+    id = 'D-' + Math.random().toString(36).substr(2,4).toUpperCase()
+             + '-' + Math.random().toString(36).substr(2,4).toUpperCase();
+    localStorage.setItem('tmt_device_id', id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+document.getElementById('id-text').textContent = 'Device ID: ' + DEVICE_ID;
+document.getElementById('id-inline').textContent = DEVICE_ID;
+
+// ── State ──
+let sessionType = 'pre';
+let nodes = [], lines = [], errors = 0, nextIdx = 0;
+let started = false, finished = false;
+let startTime = null, elapsed = 0, timerInterval = null;
+
+// ── Screen management ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function selectSession(type) {
+  sessionType = type;
+  document.getElementById('result-session-label').textContent =
+    type === 'pre' ? 'Pre-retreat baseline' : 'Post-retreat follow-up';
+  showScreen('instructions');
+}
+
+// ── Node labels ──
+function getLabel(i) {
+  const nums = ['1','2','3','4','5','6','7','8','9','10','11','12','13'];
+  const lets = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  const seq = [];
+  for (let k = 0; k < 13; k++) { seq.push(nums[k]); if (k < 12) seq.push(lets[k]); }
+  return seq[i];
+}
+function isLetter(l) { return isNaN(parseInt(l)); }
+
+// ── Canvas setup ──
+const canvas = document.getElementById('tmt-canvas');
+const ctx = canvas.getContext('2d');
+
+function setupCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.parentElement.clientWidth;
+  const h = Math.round(w * 1.15);
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  return { w, h };
+}
+
+function placeNodes(w, h) {
+  nodes = [];
+  const pad = R + 8;
+  let attempts = 0;
+  for (let i = 0; i < TOTAL; i++) {
+    let x, y, ok;
+    do {
+      x = pad + Math.random() * (w - 2 * pad);
+      y = pad + Math.random() * (h - 2 * pad);
+      ok = nodes.every(n => Math.hypot(n.x - x, n.y - y) > R * 2.7);
+      attempts++;
+    } while (!ok && attempts < 5000);
+    nodes.push({ x, y, label: getLabel(i), done: false });
+  }
+}
+
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+  ctx.clearRect(0, 0, w, h);
+
+  // Lines
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#1D9E75';
+  ctx.setLineDash([]);
+  for (let i = 1; i < lines.length; i++) {
+    ctx.beginPath();
+    ctx.moveTo(lines[i-1].x, lines[i-1].y);
+    ctx.lineTo(lines[i].x,   lines[i].y);
+    ctx.stroke();
+  }
+
+  // Nodes
+  nodes.forEach((n, i) => {
+    const isNext = i === nextIdx && started && !finished;
+    let fill, stroke, text;
+    if (n.done)       { fill = '#9FE1CB'; stroke = '#0F6E56'; text = '#04342C'; }
+    else if (isNext)  { fill = '#FAC775'; stroke = '#854F0B'; text = '#412402'; }
+    else if (isLetter(n.label)) { fill = '#CECBF6'; stroke = '#534AB7'; text = '#26215C'; }
+    else              { fill = '#B5D4F4'; stroke = '#185FA5'; text = '#042C53'; }
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = isNext ? 2.5 : 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = text;
+    ctx.font = `600 ${n.label.length > 1 ? '12' : '14'}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+}
+
+// ── Tap handling ──
+function getTapPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const scaleX = (canvas.width / dpr) / rect.width;
+  const scaleY = (canvas.height / dpr) / rect.height;
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+}
+
+function handleTap(e) {
+  e.preventDefault();
+  if (!started || finished) return;
+  const { x, y } = getTapPos(e);
+  let hit = null, hitDist = Infinity;
+  nodes.forEach((n, i) => {
+    const d = Math.hypot(n.x - x, n.y - y);
+    if (d < R + 12 && d < hitDist) { hit = i; hitDist = d; }
+  });
+  if (hit === null) return;
+  const msg = document.getElementById('tmt-msg');
+  if (hit === nextIdx) {
+    nodes[hit].done = true;
+    lines.push({ x: nodes[hit].x, y: nodes[hit].y });
+    nextIdx++;
+    document.getElementById('stat-prog').textContent = nextIdx + '/25';
+    if (nextIdx >= TOTAL) {
+      finished = true;
+      clearInterval(timerInterval);
+      showResults();
+    } else {
+      msg.innerHTML = 'Next: <strong>' + nodes[nextIdx].label + '</strong>';
+    }
+    draw();
+  } else if (!nodes[hit].done) {
+    errors++;
+    document.getElementById('stat-err').textContent = errors;
+    msg.innerHTML = '<span style="color:var(--red)">Wrong! Next: <strong>' + nodes[nextIdx].label + '</strong></span>';
+    draw();
+  }
+}
+
+canvas.addEventListener('touchstart', handleTap, { passive: false });
+canvas.addEventListener('mousedown',  handleTap);
+
+// ── Start test ──
+function startTest() {
+  showScreen('test');
+  clearInterval(timerInterval);
+  elapsed = 0; errors = 0; nextIdx = 0; started = false; finished = false; lines = [];
+  document.getElementById('stat-time').textContent = '0.0s';
+  document.getElementById('stat-prog').textContent = '0/25';
+  document.getElementById('stat-err').textContent  = '0';
+  document.getElementById('tmt-msg').innerHTML = 'Tap <strong>1</strong> to begin';
+
+  const { w, h } = setupCanvas();
+  placeNodes(w, h);
+  draw();
+
+  started = true;
+  startTime = performance.now();
+  timerInterval = setInterval(() => {
+    elapsed = (performance.now() - startTime) / 1000;
+    document.getElementById('stat-time').textContent = formatTime(elapsed);
+  }, 100);
+}
+
+function retake() {
+  showScreen('session');
+}
+
+// ── Formatting helpers ──
+function formatTime(s) {
+  return s < 60 ? s.toFixed(1) + 's' : Math.floor(s / 60) + 'm ' + (s % 60).toFixed(0) + 's';
+}
+
+function normScore(t) {
+  if (t <= 60)  return 'Excellent';
+  if (t <= 90)  return 'Above average';
+  if (t <= 120) return 'Average';
+  if (t <= 180) return 'Below average';
+  return 'Impaired range';
+}
+
+function scoreColors(cat) {
+  const map = {
+    'Excellent':      { bg: '#EAF3DE', color: '#27500A' },
+    'Above average':  { bg: '#E1F5EE', color: '#085041' },
+    'Average':        { bg: '#FAEEDA', color: '#633806' },
+    'Below average':  { bg: '#FAECE7', color: '#712B13' },
+    'Impaired range': { bg: '#FCEBEB', color: '#791F1F' },
+  };
+  return map[cat] || { bg: '#F1EFE8', color: '#2C2C2A' };
+}
+
+// ── Show results ──
+function showResults() {
+  const t = elapsed;
+  const acc = Math.round((TOTAL / (TOTAL + errors)) * 100);
+  const cat = normScore(t);
+  const c = scoreColors(cat);
+
+  document.getElementById('res-time').textContent   = formatTime(t);
+  document.getElementById('res-errors').textContent = errors;
+  document.getElementById('res-acc').textContent    = acc + '%';
+  document.getElementById('res-score').innerHTML =
+    `<span class="score-pill" style="background:${c.bg};color:${c.color}">${cat}</span>`;
+
+  showScreen('results');
+  saveToSheets({ t, acc, cat });
+}
+
+// ── Save to Google Sheets ──
+async function saveToSheets(result) {
+  const syncBox = document.getElementById('sync-box');
+  const syncMsg = document.getElementById('sync-msg');
+
+  const payload = {
+    deviceId:    DEVICE_ID,
+    sessionType: sessionType,
+    timestamp:   new Date().toISOString(),
+    timeSeconds: parseFloat(result.t.toFixed(2)),
+    errors:      errors,
+    accuracy:    result.acc,
+    performance: result.cat,
+    userAgent:   navigator.userAgent.substring(0, 80)
+  };
+
+  try {
+    const res = await fetch(SHEETS_SCRIPT_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+      mode:    'no-cors'
+    });
+    syncBox.className = 'sync-status saved';
+    syncMsg.textContent = 'Results saved successfully';
+  } catch (err) {
+    syncBox.className = 'sync-status error';
+    syncMsg.textContent = 'Could not save — check connection. ID: ' + DEVICE_ID;
+  }
+}
+</script>
+</body>
+</html>
